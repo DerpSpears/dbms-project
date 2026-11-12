@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stars %}
+{% block title %}{{ p.name }}{% endblock %}
+{% block content %}
+<section class="band band-cream">
+  <div class="detail">
+    <div class="gallery">
+      {% for img in images %}<img src="{{ img.image_url }}" alt="{{ p.name }} cover {{ loop.index }}">{% endfor %}
+    </div>
+    <div class="detail-info">
+      <p class="crumb"><a href="{{ url_for('products', c=p.category_id) }}">{{ p.category }}</a> · SKU {{ p.sku }}</p>
+      <h1 class="ink">{{ p.name }}</h1>
+      <p>{{ stars(summary.avg) }} {% if summary.n %}{{ summary.avg }} from <a href="#reviews">{{ summary.n }} review{{ "" if summary.n == 1 else "s" }}</a>{% else %}No reviews yet{% endif %}</p>
+      <p class="price big">{{ p.price | money }}</p>
+      <p>{{ p.description }}</p>
+      <p class="stock {% if p.stock_quantity <= 5 %}low{% endif %}">
+        {% if p.stock_quantity == 0 %}Sold out{% elif p.stock_quantity <= 5 %}Only {{ p.stock_quantity }} left{% else %}{{ p.stock_quantity }} in stock{% endif %}
+        · supplied by {{ p.supplier }}, {{ p.supplier_city }}
+      </p>
+      <div class="actions">
+        <form method="post" action="{{ url_for('cart_add', pid=p.product_id) }}" class="inline">
+          <input type="number" name="quantity" value="1" min="1" max="{{ [p.stock_quantity, 20] | min }}" aria-label="Quantity">
+          <button class="btn btn-orange" {% if p.stock_quantity == 0 %}disabled{% endif %}>Add to cart</button>
+        </form>
+        <form method="post" action="{{ url_for('wishlist_toggle', pid=p.product_id) }}">
+          <button class="btn btn-white">{{ "♥ In wishlist" if wished else "♡ Wishlist" }}</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band band-yellow" id="reviews">
+  <div class="section-head"><h2 class="ink">Reader reviews</h2></div>
+  <div class="reviews">
+    {% for r in reviews %}
+    <div class="bubble review">
+      <p>{{ stars(r.rating) }} <b>{{ r.first_name }}</b> <small>{{ r.review_date }}</small></p>
+      <p>{{ r.comment }}</p>
+    </div>
+    {% else %}
+    <p class="bubble">Nobody has reviewed this yet. Be the first.</p>
+    {% endfor %}
+  </div>
+
+  {% if user %}
+  <form class="panel form" method="post" action="{{ url_for('review', pid=p.product_id) }}">
+    <h3>Write a review</h3>
+    <label>Rating
+      <select name="rating" required>
+        {% for n in [5, 4, 3, 2, 1] %}<option value="{{ n }}">{{ "★" * n }} ({{ n }})</option>{% endfor %}
+      </select>
+    </label>
+    <label>Comment <textarea name="comment" rows="3" maxlength="500" placeholder="What did you think?"></textarea></label>
+    <button class="btn">Post review</button>
+  </form>
+  {% else %}
+  <p><a class="btn btn-small" href="{{ url_for('login', next=request.path) }}">Log in to review</a></p>
+  {% endif %}
+</section>
+{% endblock %}

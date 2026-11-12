@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+<section class="band band-cream">
+  <div class="section-head"><h2 class="ink">Checkout</h2><p>{{ items | length }} item{{ "" if items | length == 1 else "s" }} · {{ total | money }}</p></div>
+  <form method="post" class="checkout">
+    <div class="panel form">
+      <h3>Ship to</h3>
+      {% for a in addresses %}
+      <label class="radio">
+        <input type="radio" name="address_id" value="{{ a.address_id }}" {% if loop.first %}checked{% endif %}>
+        <span>{{ a.address_line }}, {{ a.city }}, {{ a.state }} {{ a.postal_code }}, {{ a.country }}
+          {% if a.is_default %}<b class="pill">default</b>{% endif %}</span>
+      </label>
+      {% endfor %}
+      <label class="radio">
+        <input type="radio" name="address_id" value="new" {% if not addresses %}checked{% endif %}>
+        <span>A new address</span>
+      </label>
+      <div class="new-address">
+        <label>Address line <input name="address_line"></label>
+        <div class="two">
+          <label>City <input name="city"></label>
+          <label>State <input name="state"></label>
+        </div>
+        <div class="two">
+          <label>Postal code <input name="postal_code"></label>
+          <label>Country <input name="country" value="India"></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel form">
+      <h3>Pay with</h3>
+      {% for m in methods %}
+      <label class="radio"><input type="radio" name="payment_method" value="{{ m }}" {% if loop.first %}checked{% endif %}><span>{{ m }}</span></label>
+      {% endfor %}
+      <p class="hint">This is a class demo. No real payment is taken.</p>
+      <h3>Summary</h3>
+      <ul class="summary">
+        {% for i in items %}<li><span>{{ i.quantity }} × {{ i.name }}</span><span>{{ i.line_total | money }}</span></li>{% endfor %}
+        <li class="total"><span>Total</span><span>{{ total | money }}</span></li>
+      </ul>
+      <button class="btn btn-orange btn-block">Place order</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

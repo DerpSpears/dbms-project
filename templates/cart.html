@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Cart{% endblock %}
+{% block content %}
+<section class="band band-cream">
+  <div class="section-head"><h2 class="ink">Your cart</h2></div>
+  {% if items %}
+  <div class="panel table-wrap">
+    <table>
+      <thead><tr><th colspan="2">Item</th><th>Price</th><th>Qty</th><th class="num">Total</th></tr></thead>
+      <tbody>
+        {% for i in items %}
+        <tr>
+          <td class="thumb"><img src="{{ i.image_url }}" alt=""></td>
+          <td><a href="{{ url_for('product', pid=i.product_id) }}">{{ i.name }}</a>
+            {% if i.quantity > i.stock_quantity %}<br><small class="low">Only {{ i.stock_quantity }} in stock</small>{% endif %}</td>
+          <td>{{ i.price | money }}</td>
+          <td>
+            <form method="post" action="{{ url_for('cart_update', item_id=i.cart_item_id) }}" class="inline">
+              <input type="number" name="quantity" value="{{ i.quantity }}" min="0" max="20" aria-label="Quantity for {{ i.name }}">
+              <button class="btn btn-small btn-white">Update</button>
+            </form>
+          </td>
+          <td class="num">{{ i.line_total | money }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr><th colspan="4">Total</th><th class="num">{{ total | money }}</th></tr></tfoot>
+    </table>
+  </div>
+  <p class="hint">Set a quantity to 0 to remove an item.</p>
+  <div class="actions">
+    <a class="btn btn-orange" href="{{ url_for('checkout') }}">Checkout</a>
+    <a class="btn btn-white" href="{{ url_for('products') }}">Keep shopping</a>
+  </div>
+  {% else %}
+  <p class="bubble big">Your cart is empty. The shelf is not.</p>
+  <p><a class="btn" href="{{ url_for('products') }}">Browse the shelf</a></p>
+  {% endif %}
+</section>
+{% endblock %}

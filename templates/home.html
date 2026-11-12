@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "_macros.html" import product_card, stars, burst %}
+{% block title %}INKPOW!{% endblock %}
+{% block overlay %}{% include "_opener.html" %}{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-text">
+    <h1><span>Comics, manga and figures</span> picked by readers, packed flat and shipped fast.</h1>
+    <p>A small store with a big database underneath. Browse the shelf, fill a cart, place an order,
+       then open the Database tab to watch every table change.</p>
+    <div class="actions">
+      <a class="btn btn-orange" href="{{ url_for('products') }}">Explore the shelf</a>
+      <a class="btn" href="{{ url_for('database') }}">See the database</a>
+    </div>
+  </div>
+  {% if featured %}
+  <a class="hero-cover" href="{{ url_for('product', pid=featured.product_id) }}">
+    <span class="cloud">Top rated<br>{{ featured.rating }} ★</span>
+    <img src="{{ featured.image_url }}" alt="Cover of {{ featured.name }}">
+    <span class="hero-tag">{{ featured.name }} · {{ featured.price | money }}</span>
+  </a>
+  {% endif %}
+</section>
+
+<section class="band band-blue">
+  <div class="section-head">
+    <h2>Fresh off the press</h2>
+    <p>{{ products | length }} pieces, newest first.</p>
+    <a class="btn btn-small" href="{{ url_for('products') }}">Shop all</a>
+  </div>
+  <div class="grid">
+    {% for p in products %}{{ product_card(p, loop.index, products | length) }}{% endfor %}
+  </div>
+</section>
+
+<section class="band band-cream">
+  <div class="section-head">
+    <h2 class="ink">Pick a shelf</h2>
+    <p>Each category points at its parent through <code>parent_category_id</code>.</p>
+  </div>
+  <ul class="shelves">
+    {% for c in categories %}
+    <li><a href="{{ url_for('products', c=c.category_id) }}">
+      <small>{{ c.parent }}</small>
+      <strong>{{ c.name }}</strong>
+      <span>{{ c.pieces }} piece{{ "" if c.pieces == 1 else "s" }}</span>
+    </a></li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="band band-yellow">
+  <div class="section-head">
+    <h2 class="ink">One order, five tables</h2>
+    <p>Checkout runs as a single transaction. If any step fails, all of it rolls back.</p>
+  </div>
+  <ol class="flow">
+    <li><b>cart_items</b><span>what you picked</span></li>
+    <li><b>orders</b><span>one row per checkout</span></li>
+    <li><b>order_items</b><span>price frozen at purchase</span></li>
+    <li><b>payments</b><span>how it was paid</span></li>
+    <li><b>shipments</b><span>carrier and tracking</span></li>
+  </ol>
+</section>
+
+{% if quote %}
+<section class="band band-red">
+  <div class="proof">
+    {{ burst("YEAH!", "#fff", "#F23A3A") }}
+    <div>
+      <p class="proof-stat">{{ stats.avg }} out of 5 from {{ stats.n }} reader reviews</p>
+      <blockquote class="bubble big">“{{ quote.comment }}”</blockquote>
+      <p class="proof-by">{{ quote.first_name }}, on
+        <a href="{{ url_for('product', pid=quote.product_id) }}">{{ quote.product }}</a></p>
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

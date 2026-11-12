@@ -1,0 +1,71 @@
+{% from "_macros.html" import burst %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}INKPOW!{% endblock %} · Comics &amp; Collectibles</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Archivo:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  {% block overlay %}{% endblock %}
+  <div class="stickers" aria-hidden="true">
+    {{ burst("POW!", "#fff", "#FF9A1F", "s1") }}
+    {{ burst("BOOM!", "#fff", "#F23A3A", "s2") }}
+    {{ burst("OUCH", "#FFD21F", "#fff", "s3") }}
+  </div>
+
+  <div class="frame">
+    <header class="nav">
+      <a class="logo" href="{{ url_for('home') }}">INK<span>POW!</span></a>
+      <input type="checkbox" id="menu" class="menu-toggle">
+      <label for="menu" class="menu-btn" aria-label="Menu">☰</label>
+      <nav>
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('products') }}">Shop</a>
+        <a href="{{ url_for('wishlist') }}">Wishlist</a>
+        <a href="{{ url_for('orders') }}">Orders</a>
+        <a href="{{ url_for('database') }}">Database</a>
+        <a href="{{ url_for('cart') }}">Cart{% if cart_count %} <b class="pill">{{ cart_count }}</b>{% endif %}</a>
+        {% if user %}
+          <form method="post" action="{{ url_for('logout') }}"><button class="btn btn-small">Log out {{ user.first_name }}</button></form>
+        {% else %}
+          <a class="btn btn-small" href="{{ url_for('login') }}">Log in</a>
+        {% endif %}
+      </nav>
+    </header>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <div class="flashes">
+        {% for m in messages %}<div class="bubble" role="status">{{ m }}</div>{% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+
+    <main>{% block content %}{% endblock %}</main>
+
+    {% if g.get('sql_log') or last_action %}
+    <details class="sql-panel" {% if last_action %}open{% endif %}>
+      <summary>⚡ SQL behind this page <span class="pill">{{ (g.get('sql_log', []) | length) + ((last_action or []) | length) }}</span></summary>
+      {% if last_action %}
+        <h4>Your last action ran</h4>
+        <ol class="sql write">{% for s in last_action %}<li><code>{{ s }}</code></li>{% endfor %}</ol>
+        <h4>Then this page ran</h4>
+      {% endif %}
+      <ol class="sql">{% for s in g.get('sql_log', []) %}<li><code>{{ s }}</code></li>{% endfor %}</ol>
+    </details>
+    {% endif %}
+
+    <footer>
+      <span class="logo small">INK<span>POW!</span></span>
+      <p>DBMS project · Flask + SQLite · 14 tables, plain SQL, no ORM.</p>
+      <a href="{{ url_for('home', intro=1) }}">Replay the opening</a>
+      <a href="{{ url_for('database') }}">Explore the database →</a>
+    </footer>
+  </div>
+</body>
+</html>
