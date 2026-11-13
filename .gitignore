@@ -2,3 +2,4 @@ store.db
 .secret_key
 __pycache__/
 *.pyc
+db_config.ini

@@ -118,13 +118,13 @@ def product(pid):
 def review(pid):
     rating = request.form.get("rating", type=int)
     comment = request.form.get("comment", "").strip()[:500]
-    if rating not in (1, 2, 3, 4, 5):
-        flash("Pick a rating from 1 to 5.")
-    elif not db.get_product(pid):
+    if not db.get_product(pid):
         abort(404)
-    else:
+    try:  # trg_reviews_before_insert checks the rating is 1 to 5
         db.add_review(pid, g.user["customer_id"], rating, comment)
         flash("Review saved. Thanks!")
+    except db.DatabaseError as e:
+        flash(str(e))
     return redirect(url_for("product", pid=pid) + "#reviews")
 
 
@@ -204,10 +204,11 @@ def cart_add(pid):
     item = db.product_stock(pid)
     if not item:
         abort(404)
-    if item["stock_quantity"] < 1:
-        flash("Sold out, sorry!")
+    try:  # sp_add_to_cart refuses sold-out products
+        db.add_to_cart(g.user["customer_id"], pid, qty)
+    except db.DatabaseError as e:
+        flash(str(e))
         return redirect(url_for("product", pid=pid))
-    db.add_to_cart(g.user["customer_id"], pid, qty)
     flash(f"POW! {item['name']} is in your cart.")
     return redirect(safe_next(request.form.get("next")) or url_for("cart"))
 
@@ -232,10 +233,7 @@ def checkout():
         return redirect(url_for("products"))
 
     if request.method == "POST":
-        method = request.form.get("payment_method")
-        if method not in db.PAYMENT_METHODS:
-            flash("Choose a payment method.")
-            return redirect(url_for("checkout"))
+        method = request.form.get("payment_method")   # sp_place_order checks it
         choice = request.form.get("address_id", "new")
         address_id = new_address = None
         if choice == "new":
@@ -248,7 +246,7 @@ def checkout():
             address_id = choice
         try:
             order_id = db.place_order(cid, method, address_id, new_address)
-        except ValueError as e:
+        except db.DatabaseError as e:   # a SIGNAL from sp_place_order or a trigger; all rolled back
             flash(str(e))
             return redirect(url_for("cart"))
         flash(f"BOOM! Order #{order_id} placed.")
@@ -291,10 +289,22 @@ def order_advance(oid):
 def database():
     sql = request.args.get("sql", "").strip()
     columns, rows, error = db.run_console(sql) if sql else ([], [], None)
-    diagram = er_svg(lambda table: url_for("database", sql=f"SELECT * FROM {table}") + "#result")
+    diagram = er_svg(lambda table: url_for("database", sql=db.browse_sql(table)) + "#result")
     return render_template("database.html", schema=db.describe_schema(), reports=db.REPORTS,
+                           objects=db.advanced_objects(), browse_sql=db.browse_sql,
                            sql=sql, columns=columns, rows=rows, error=error,
-                           er=Markup(diagram), mapping=mapping_rows())
+                           er=Markup(diagram), mapping=mapping_rows(),
+                           restocked=session.pop("restocked", None))
+
+
+@app.route("/database/restock", methods=["POST"])
+def restock():
+    """Runs the cursor-based stored procedure sp_restock_low_stock(5, 10)."""
+    rows = db.restock_low_stock(5, 10)
+    session["restocked"] = [[r["product"], r["old_stock"], r["new_stock"]] for r in rows]
+    flash(f"Restocked {len(rows)} product{'' if len(rows) == 1 else 's'}." if rows
+          else "Nothing is at 5 or below, so nothing was restocked.")
+    return redirect(url_for("database") + "#advanced")
 
 
 # ---------------------------------------------------------------- generated cover art

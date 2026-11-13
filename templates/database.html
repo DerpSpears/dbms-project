@@ -33,7 +33,7 @@
   <div class="schema">
     {% for t in schema %}
     <div class="panel table-card">
-      <a class="table-name" href="{{ url_for('database', sql='SELECT * FROM ' ~ t.name) }}#result">
+      <a class="table-name" href="{{ url_for('database', sql=browse_sql(t.name)) }}#result">
         {{ t.name }} <span class="pill">{{ t.rows }} rows</span>
       </a>
       <ul>
@@ -46,6 +46,46 @@
       </ul>
     </div>
     {% endfor %}
+  </div>
+</section>
+
+<section class="band band-red" id="advanced">
+  <div class="section-head">
+    <h2>Advanced features</h2>
+    <p>Everything in <code>advanced.sql</code>, checked live against the database. The store uses these: sign-up, add to cart, checkout and order tracking all run through them.</p>
+  </div>
+  <div class="adv-grid">
+    {% for title, items in objects %}
+    <div class="panel adv">
+      <h3>{{ title }} <span class="pill">{{ items | length }}</span></h3>
+      {% for o in items %}
+      <details>
+        <summary><code>{{ o.name }}</code>{% if o.live %}<b class="live" title="exists in the live database">live</b>{% else %}<b class="live missing">missing</b>{% endif %}</summary>
+        {% if o.about %}<p>{{ o.about }}</p>{% endif %}
+        <pre>{{ o.sql }}</pre>
+      </details>
+      {% endfor %}
+    </div>
+    {% endfor %}
+    <div class="panel adv">
+      <h3>Try them</h3>
+      <p>Each link loads a query into the console below.</p>
+      <ul class="try">
+        <li><a href="{{ url_for('database', sql='SELECT name, price, rating, image_url FROM v_product_catalog ORDER BY rating DESC') }}#result">Query a view</a></li>
+        <li><a href="{{ url_for('database', sql='SELECT name, fn_product_rating(product_id) AS rating FROM products') }}#result">Call a stored function</a></li>
+        <li><a href="{{ url_for('database', sql='CALL sp_customer_tiers()') }}#result">Call a procedure that uses a cursor</a></li>
+        <li><a href="{{ url_for('database', sql='SELECT TRIGGER_NAME, ACTION_TIMING, EVENT_MANIPULATION, EVENT_OBJECT_TABLE FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = DATABASE()') }}#result">List the triggers</a></li>
+        <li><a href="{{ url_for('database', sql='SELECT password_hash FROM customers') }}#result">See a privilege refuse a column</a></li>
+      </ul>
+      <form method="post" action="{{ url_for('restock') }}">
+        <button class="btn btn-orange btn-block">Run sp_restock_low_stock(5, 10)</button>
+      </form>
+      <p class="hint">Adds 10 to every product with 5 or fewer in stock, using a cursor.</p>
+      {% if restocked %}
+      <table class="mini"><thead><tr><th>Product</th><th>Was</th><th>Now</th></tr></thead>
+        <tbody>{% for p, a, b in restocked %}<tr><td>{{ p }}</td><td>{{ a }}</td><td>{{ b }}</td></tr>{% endfor %}</tbody></table>
+      {% endif %}
+    </div>
   </div>
 </section>
 
@@ -66,7 +106,7 @@
 <section class="band band-cream" id="result">
   <div class="section-head">
     <h2 class="ink">SQL console</h2>
-    <p>Read-only. SELECT anything; writes are refused and password hashes read as NULL.</p>
+    <p>Runs as the read-only MariaDB user <code>inkpow_ro</code>: SELECT and CALL sp_customer_tiers work, writes are refused, and customers.password_hash is off limits.</p>
   </div>
   <form method="get" action="{{ url_for('database') }}#result" class="console">
     <textarea name="sql" rows="{{ [[sql.count('\n') + 2, 4] | max, 14] | min }}" spellcheck="false" aria-label="SQL query"

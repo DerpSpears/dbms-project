@@ -1,129 +1,146 @@
--- INKPOW! store schema.
+-- INKPOW! store schema for MariaDB / MySQL.
 -- Exactly the 14 tables from the schema diagram: same table names, same columns,
 -- same column order, same data types, same primary and foreign keys.
--- Nothing else is added: no extra columns, no UNIQUE or CHECK constraints, no indexes.
+-- No UNIQUE or CHECK constraints are added; the rules they would cover are
+-- enforced by the triggers and procedures in advanced.sql.
 --
--- Two things SQLite needs that a drawing does not show:
---   * a primary key is written INTEGER PRIMARY KEY (SQLite's auto-numbered int)
---   * DEFAULT CURRENT_TIMESTAMP / CURRENT_DATE fills the date columns on insert
-
-PRAGMA foreign_keys = ON;
+-- Two things MariaDB needs that the drawing does not show:
+--   * VARCHAR needs a maximum length, so each one has a sensible size
+--   * primary keys use AUTO_INCREMENT so new rows get the next number
 
 CREATE TABLE customers (
-    customer_id   INTEGER PRIMARY KEY,
-    first_name    VARCHAR,
-    last_name     VARCHAR,
-    email         VARCHAR NOT NULL,
-    phone         VARCHAR,
-    password_hash VARCHAR,
+    customer_id   INT AUTO_INCREMENT PRIMARY KEY,
+    first_name    VARCHAR(50),
+    last_name     VARCHAR(50),
+    email         VARCHAR(120) NOT NULL,
+    phone         VARCHAR(20),
+    password_hash VARCHAR(255),
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE = InnoDB;
 
 CREATE TABLE addresses (
-    address_id   INTEGER PRIMARY KEY,
-    customer_id  INT REFERENCES customers(customer_id),
-    address_line VARCHAR,
-    city         VARCHAR,
-    state        VARCHAR,
-    postal_code  VARCHAR,
-    country      VARCHAR,
-    is_default   BOOLEAN
-);
+    address_id   INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id  INT,
+    address_line VARCHAR(200),
+    city         VARCHAR(80),
+    state        VARCHAR(80),
+    postal_code  VARCHAR(12),
+    country      VARCHAR(80),
+    is_default   BOOLEAN,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+) ENGINE = InnoDB;
 
 CREATE TABLE categories (
-    category_id        INTEGER PRIMARY KEY,
-    name               VARCHAR,
-    parent_category_id INT REFERENCES categories(category_id)
-);
+    category_id        INT AUTO_INCREMENT PRIMARY KEY,
+    name               VARCHAR(80),
+    parent_category_id INT,
+    FOREIGN KEY (parent_category_id) REFERENCES categories(category_id)
+) ENGINE = InnoDB;
 
 CREATE TABLE suppliers (
-    supplier_id   INTEGER PRIMARY KEY,
-    name          VARCHAR,
-    contact_email VARCHAR,
-    phone         VARCHAR,
-    address       VARCHAR
-);
+    supplier_id   INT AUTO_INCREMENT PRIMARY KEY,
+    name          VARCHAR(120),
+    contact_email VARCHAR(120),
+    phone         VARCHAR(20),
+    address       VARCHAR(200)
+) ENGINE = InnoDB;
 
 CREATE TABLE products (
-    product_id     INTEGER PRIMARY KEY,
-    name           VARCHAR,
+    product_id     INT AUTO_INCREMENT PRIMARY KEY,
+    name           VARCHAR(120),
     description    TEXT,
     price          DECIMAL(10,2),
-    sku            VARCHAR,
-    category_id    INT REFERENCES categories(category_id),
-    supplier_id    INT REFERENCES suppliers(supplier_id),
+    sku            VARCHAR(40),
+    category_id    INT,
+    supplier_id    INT,
     stock_quantity INT,
-    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(category_id),
+    FOREIGN KEY (supplier_id) REFERENCES suppliers(supplier_id)
+) ENGINE = InnoDB;
 
 CREATE TABLE product_images (
-    image_id   INTEGER PRIMARY KEY,
-    product_id INT REFERENCES products(product_id),
-    image_url  VARCHAR
-);
+    image_id   INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT,
+    image_url  VARCHAR(255),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+) ENGINE = InnoDB;
 
 CREATE TABLE reviews (
-    review_id   INTEGER PRIMARY KEY,
-    product_id  INT REFERENCES products(product_id),
-    customer_id INT REFERENCES customers(customer_id),
+    review_id   INT AUTO_INCREMENT PRIMARY KEY,
+    product_id  INT,
+    customer_id INT,
     rating      INT,
     comment     TEXT,
-    review_date DATE DEFAULT CURRENT_DATE
-);
+    review_date DATE DEFAULT (CURRENT_DATE),
+    FOREIGN KEY (product_id)  REFERENCES products(product_id),
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+) ENGINE = InnoDB;
 
 CREATE TABLE wishlist (
-    wishlist_id INTEGER PRIMARY KEY,
-    customer_id INT REFERENCES customers(customer_id),
-    product_id  INT REFERENCES products(product_id),
-    added_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    wishlist_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT,
+    product_id  INT,
+    added_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
+    FOREIGN KEY (product_id)  REFERENCES products(product_id)
+) ENGINE = InnoDB;
 
 CREATE TABLE cart (
-    cart_id     INTEGER PRIMARY KEY,
-    customer_id INT REFERENCES customers(customer_id),
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    cart_id     INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+) ENGINE = InnoDB;
 
 CREATE TABLE cart_items (
-    cart_item_id INTEGER PRIMARY KEY,
-    cart_id      INT REFERENCES cart(cart_id),
-    product_id   INT REFERENCES products(product_id),
+    cart_item_id INT AUTO_INCREMENT PRIMARY KEY,
+    cart_id      INT,
+    product_id   INT,
     quantity     INT,
-    added_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    added_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cart_id)    REFERENCES cart(cart_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+) ENGINE = InnoDB;
 
 CREATE TABLE orders (
-    order_id            INTEGER PRIMARY KEY,
-    customer_id         INT REFERENCES customers(customer_id),
-    shipping_address_id INT REFERENCES addresses(address_id),
-    order_date          DATE DEFAULT CURRENT_DATE,
-    status              VARCHAR,
-    total_amount        DECIMAL(10,2)
-);
+    order_id            INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id         INT,
+    shipping_address_id INT,
+    order_date          DATE DEFAULT (CURRENT_DATE),
+    status              VARCHAR(20),
+    total_amount        DECIMAL(10,2),
+    FOREIGN KEY (customer_id)         REFERENCES customers(customer_id),
+    FOREIGN KEY (shipping_address_id) REFERENCES addresses(address_id)
+) ENGINE = InnoDB;
 
 CREATE TABLE order_items (
-    order_item_id INTEGER PRIMARY KEY,
-    order_id      INT REFERENCES orders(order_id),
-    product_id    INT REFERENCES products(product_id),
+    order_item_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id      INT,
+    product_id    INT,
     quantity      INT,
-    unit_price    DECIMAL(10,2)
-);
+    unit_price    DECIMAL(10,2),
+    FOREIGN KEY (order_id)   REFERENCES orders(order_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+) ENGINE = InnoDB;
 
 CREATE TABLE payments (
-    payment_id       INTEGER PRIMARY KEY,
-    order_id         INT REFERENCES orders(order_id),
-    payment_method   VARCHAR,
+    payment_id       INT AUTO_INCREMENT PRIMARY KEY,
+    order_id         INT,
+    payment_method   VARCHAR(30),
     amount           DECIMAL(10,2),
-    payment_status   VARCHAR,
-    transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    payment_status   VARCHAR(20),
+    transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id)
+) ENGINE = InnoDB;
 
 CREATE TABLE shipments (
-    shipment_id     INTEGER PRIMARY KEY,
-    order_id        INT REFERENCES orders(order_id),
-    carrier         VARCHAR,
-    tracking_number VARCHAR,
+    shipment_id     INT AUTO_INCREMENT PRIMARY KEY,
+    order_id        INT,
+    carrier         VARCHAR(60),
+    tracking_number VARCHAR(40),
     shipped_date    DATE,
     delivered_date  DATE,
-    status          VARCHAR
-);
+    status          VARCHAR(20),
+    FOREIGN KEY (order_id) REFERENCES orders(order_id)
+) ENGINE = InnoDB;

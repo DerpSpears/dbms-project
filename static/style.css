@@ -345,3 +345,20 @@ footer p { margin: 0; }
 .op-hint { position: absolute; right: clamp(16px, 3vw, 40px); bottom: clamp(18px, 4vh, 44px); padding: 6px 16px; font: 1.5rem var(--display); letter-spacing: 1.5px; background: var(--ink); color: var(--yellow); border-radius: 99px; animation: hint-bob 1s ease-in-out infinite alternate; }
 @keyframes hint-bob { from { translate: 0 -4px; } to { translate: 0 5px; } }
 @media (max-width: 700px) { .op-hint, .op-issue { display: none; } .op-foot p { font-size: .9rem; } .op-tag { font-size: 1rem; } }
+
+/* ---------- advanced features (Database tab) ---------- */
+.adv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 22px; align-items: start; }
+.adv h3 { display: flex; align-items: center; gap: 10px; }
+.adv details { border-top: 2px dashed #ccc; padding: 6px 0; }
+.adv summary { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 700; }
+.adv summary code { font-size: .86rem; }
+.adv details p { font-size: .86rem; margin: 6px 0; }
+.adv pre { margin: 6px 0 4px; padding: 10px 12px; max-height: 340px; overflow: auto; font: .74rem/1.45 var(--mono); background: #16161d; color: #FFE9A6; border-radius: 8px; white-space: pre; }
+.live { font: 800 .66rem var(--body); text-transform: uppercase; letter-spacing: .06em; padding: 1px 7px; border-radius: 99px; background: #18B67A; color: #fff; border: 2px solid var(--ink); }
+.live.missing { background: var(--red); }
+.try { margin: 0 0 14px; padding-left: 18px; }
+.try li { margin: 4px 0; font-weight: 600; }
+table.mini { margin-top: 10px; font-size: .85rem; }
+table.mini th, table.mini td { padding: 5px 8px; }
+.band-red .adv p, .band-red .adv li { color: var(--ink); }
+.band-red .section-head code { background: rgba(0,0,0,.25); padding: 0 4px; border-radius: 4px; }
