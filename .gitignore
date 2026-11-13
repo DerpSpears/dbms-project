@@ -1,5 +1,9 @@
-store.db
-.secret_key
+node_modules/
+.next/
+next-env.d.ts
+.env.local
+.env*.local
+*.tsbuildinfo
 __pycache__/
 *.pyc
-db_config.ini
+docs/project-report.html

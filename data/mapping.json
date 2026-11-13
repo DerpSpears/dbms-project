@@ -1,0 +1,72 @@
+[
+ [
+  "Customer has Address",
+  "1 : N",
+  "addresses.customer_id (FK)"
+ ],
+ [
+  "Customer owns Cart",
+  "1 : 1",
+  "cart.customer_id (FK)"
+ ],
+ [
+  "Cart contains Product",
+  "M : N",
+  "its own table: cart_items"
+ ],
+ [
+  "Customer wishes Product",
+  "M : N",
+  "its own table: wishlist"
+ ],
+ [
+  "Customer places Order",
+  "1 : N",
+  "orders.customer_id (FK)"
+ ],
+ [
+  "Order contains Product",
+  "M : N",
+  "its own table: order_items"
+ ],
+ [
+  "Order ships to Address",
+  "N : 1",
+  "orders.shipping_address_id (FK)"
+ ],
+ [
+  "Order paid by Payment",
+  "1 : N",
+  "payments.order_id (FK)"
+ ],
+ [
+  "Order ship via Shipment",
+  "1 : N",
+  "shipments.order_id (FK)"
+ ],
+ [
+  "Supplier supplies Product",
+  "1 : N",
+  "products.supplier_id (FK)"
+ ],
+ [
+  "Product belongs to Category",
+  "N : 1",
+  "products.category_id (FK)"
+ ],
+ [
+  "Product has Product Image",
+  "1 : N",
+  "product_images.product_id (FK)"
+ ],
+ [
+  "Customer reviews Product",
+  "M : N",
+  "its own table: reviews"
+ ],
+ [
+  "Category parent of Category",
+  "1 : N",
+  "categories.parent_category_id (FK to itself)"
+ ]
+]

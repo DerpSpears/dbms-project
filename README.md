@@ -1,63 +1,75 @@
-# INKPOW! DBMS project
+# INKPOW!
 
-An online comic and collectibles store built around a 14-table MariaDB database:
-customers, addresses, categories, suppliers, products, product_images, reviews,
-wishlist, cart, cart_items, orders, order_items, payments and shipments.
+An online comic and collectibles store with two databases underneath it:
 
-The website is a comic-styled Flask app, but the project is about the database.
-All SQL is written by hand, with no ORM, and the important work happens inside
-MariaDB itself through views, stored procedures, functions and triggers.
+- **MariaDB** (MySQL compatible) for customers, the catalogue, carts, orders, payments and shipments. These need transactions, foreign keys and exact money values.
+- **MongoDB** for product specs, which have different fields for every kind of product, and for an activity log of views, searches, cart adds and orders that the admin dashboard summarises.
 
-## Running it
+The web app is Next.js 15. Pages read data on the server, and every form posts to an API route under `app/api`. All SQL is in `lib/db.ts` and all MongoDB code is in `lib/mongo.ts`.
 
-You need MariaDB (or MySQL) running locally, plus Python with Flask and PyMySQL.
+The full write-up is in [`docs/project-report.pdf`](docs/project-report.pdf). It covers the problem statement, ER diagram, schema, data dictionary, every query with its output, screenshots, test results and viva questions.
 
-    pip install flask pymysql
-    sudo sh setup.sh      # once: creates the database and its two users
-    python3 app.py
+## Setup
 
-Then open http://127.0.0.1:5000. On first run the app loads `schema.sql`,
-`seed.sql` and `advanced.sql` into the `inkpow` database.
-`python3 db.py reset` rebuilds everything with fresh sample data.
+You need MariaDB, MongoDB and Node.js 20 or newer.
 
-Demo login: `asha@example.com` / `demo1234`. Every seeded customer uses that password.
+```sh
+sudo systemctl start mariadb mongod
+sudo sh setup.sh          # creates the database, 3 roles, 4 users and .env.local with random passwords
+npm install
+npm run db:reset          # builds both databases from db/
+npm run build && npm start    # http://localhost:3000  (or npm run dev)
+```
 
-## Advanced database features
+Demo logins:
 
-All of these are in `advanced.sql`, and the store uses them.
+| Role | Email | Password |
+|---|---|---|
+| Customer | asha@example.com | demo1234 |
+| Admin | admin@inkpow.test | admin1234 |
 
-| Feature | Objects |
+Run the tests with `npm test`, then `npm run db:reset` to put the sample data back.
+
+## What is where
+
+| Path | Contents |
 |---|---|
-| Views | `v_product_catalog`, `v_order_summary`, `v_customer_spend`, `v_low_stock` |
-| Stored functions | `fn_product_rating`, `fn_cart_total`, `fn_order_total` |
-| Stored procedures | `sp_add_to_cart`, `sp_place_order`, `sp_advance_order`, `sp_customer_tiers`, `sp_restock_low_stock` |
-| Cursors | inside `sp_place_order`, `sp_customer_tiers` and `sp_restock_low_stock` |
-| Triggers | 8, on customers, reviews, cart_items, order_items and shipments |
-| Error handling | `SIGNAL`, `RESIGNAL`, `DECLARE ... HANDLER` |
-| Transactions | checkout is one transaction inside `sp_place_order`, with row locking |
-| Indexes | 5, including a composite one |
-| Users and privileges | a read-only user with column-level `SELECT` for the SQL console |
-| Window functions, recursive CTE, subqueries, UNION | in the reports on the Database tab |
+| `db/schema.sql` | The 14 tables, exactly as in the hand-drawn schema diagram |
+| `db/seed.sql` | Sample data |
+| `db/advanced.sql` | Views, functions, procedures with cursors, triggers, indexes |
+| `db/migrations.sql` | ALTER and DROP: role column, CHECK constraints, UNIQUE email, FULLTEXT index |
+| `db/security.sql` | What each MariaDB role may do |
+| `db/mongo-seed.json` | Product spec documents |
+| `lib/db.ts` | Every SQL statement the app runs, with one connection pool per role |
+| `lib/mongo.ts` | MongoDB CRUD and aggregation pipelines |
+| `lib/auth.ts` | bcrypt passwords and a signed JWT session cookie |
+| `app/api/` | The API layer: 16 route handlers |
+| `scripts/reset-db.mjs` | Rebuilds MariaDB and MongoDB |
+| `tests/database.test.mjs` | 21 tests of constraints, triggers, transactions, roles and MongoDB |
+| `docs/` | Project report, hand-drawn diagrams |
 
-## Files
+## Database features
 
-| File | What it holds |
+| Feature | Where |
 |---|---|
-| `schema.sql` | The 14 tables, matching the hand-drawn schema diagram column for column |
-| `seed.sql` | Sample data |
-| `advanced.sql` | Views, functions, procedures, cursors, triggers, indexes and grants |
-| `setup.sh` | One-time MariaDB setup; writes `db_config.ini`, which git ignores |
-| `db.py` | Every database call from Python, the reports and the read-only console |
-| `app.py` | The web pages. It calls `db.py` and has no SQL of its own |
-| `er_diagram.py` | Draws the ER diagram shown on the Database tab |
-| `templates/`, `static/` | Page templates and styling |
-| `docs/viva-notes.pdf` | Viva notes: diagrams, relationships, normalization, every advanced feature with real output |
+| CREATE, ALTER, DROP | `schema.sql`, `migrations.sql`, reset script |
+| Primary keys, 18 foreign keys, NOT NULL, UNIQUE, CHECK, ENUM, defaults | `schema.sql`, `migrations.sql` |
+| 4 views, 3 stored functions, 5 stored procedures | `advanced.sql` |
+| Cursors, SIGNAL / RESIGNAL, handlers | inside the procedures |
+| 8 triggers | email check, cart creation, rating, quantity, stock, order status |
+| Transaction with row locking | checkout (`sp_place_order`) |
+| Indexes: single, composite, unique, FULLTEXT | `advanced.sql`, `migrations.sql` |
+| Roles and column-level privileges | `setup.sh`, `security.sql` |
+| JOIN, GROUP BY, HAVING, subqueries, UNION, window functions, recursive CTE | reports on the Database tab |
+| MongoDB validator, unique, multikey, text and TTL indexes | `scripts/reset-db.mjs` |
+| MongoDB CRUD and aggregation pipelines | `lib/mongo.ts`, admin pages |
 
-## Seeing the database at work
+## Roles
 
-Each page has a "SQL behind this page" panel at the bottom that lists the statements
-it just ran, including the procedure calls from your last click.
+Customers and admins see different menus and pages. Behind that, the app connects to MariaDB as a different user for each role:
 
-The Database tab shows the ER diagram, every table with its keys and row counts,
-every view, function, procedure, trigger and index with its source, fourteen
-ready-made reports and a SQL console that runs as the read-only user.
+| App user | MariaDB user | Role | Notes |
+|---|---|---|---|
+| Guest or customer | `inkpow_web` | `inkpow_customer` | Can shop and check out. Cannot write `customers.role` or change prices. |
+| Admin | `inkpow_staff` | `inkpow_admin` | Can change any data. Cannot CREATE, ALTER or DROP. |
+| SQL console | `inkpow_ro` | `inkpow_readonly` | SELECT only. Cannot read `password_hash`. |

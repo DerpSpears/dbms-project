@@ -1,0 +1,16 @@
+{
+  "product_details": [
+    {"product_id": 1, "sku": "CMX-CV-001", "format": "comic", "specs": {"issue": 1, "pages": 32, "writer": "R. Nair", "artist": "K. Bose", "colour": "full colour", "binding": "stapled"}, "tags": ["superhero", "origin story", "lightning", "first issue"]},
+    {"product_id": 2, "sku": "CMX-NS-000", "format": "comic", "specs": {"issue": 0, "pages": 48, "writer": "A. Fernandes", "artist": "S. Rao", "colour": "full colour", "binding": "stapled"}, "tags": ["superhero", "detective", "origin story", "noir"]},
+    {"product_id": 3, "sku": "CMX-CI-005", "format": "comic", "specs": {"issue": 5, "pages": 28, "writer": "M. Dsouza", "artist": "M. Dsouza", "colour": "full colour", "binding": "stapled"}, "tags": ["superhero", "comedy", "demons"]},
+    {"product_id": 4, "sku": "MNG-RN-001", "format": "manga", "specs": {"volume": 1, "pages": 192, "mangaka": "H. Sato", "translator": "P. Menon", "reading_direction": "right to left", "age_rating": "16+"}, "tags": ["manga", "samurai", "cyberpunk", "first volume"]},
+    {"product_id": 5, "sku": "MNG-MC-003", "format": "manga", "specs": {"volume": 3, "pages": 180, "mangaka": "Y. Mori", "translator": "P. Menon", "reading_direction": "right to left", "age_rating": "all ages"}, "tags": ["manga", "mecha", "comedy", "college"]},
+    {"product_id": 6, "sku": "IND-PM-001", "format": "graphic novel", "specs": {"pages": 120, "writer": "L. Thomas", "artist": "L. Thomas", "colour": "two colour", "binding": "hardcover"}, "tags": ["indie", "family", "slice of life"]},
+    {"product_id": 7, "sku": "IND-QK-001", "format": "graphic novel", "specs": {"pages": 96, "writer": "J. Pillai", "artist": "N. Ghosh", "colour": "watercolour", "binding": "paperback"}, "tags": ["indie", "monsters", "comedy", "slice of life"]},
+    {"product_id": 8, "sku": "FIG-CV-007", "format": "figure", "specs": {"height_cm": 18, "material": "PVC and ABS", "joints": 14, "accessories": ["lightning stand", "spare hands"], "scale": "1:10"}, "tags": ["superhero", "figure", "poseable", "lightning"]},
+    {"product_id": 9, "sku": "FIG-CI-005", "format": "figure", "specs": {"height_cm": 12.7, "material": "soft vinyl", "joints": 0, "limited_edition": true, "edition_size": 500}, "tags": ["superhero", "figure", "vinyl", "demons"]},
+    {"product_id": 10, "sku": "PST-NS-A2", "format": "poster", "specs": {"size": "A2", "paper_gsm": 200, "finish": "matte", "print": "offset", "ships": "rolled in a tube"}, "tags": ["poster", "noir", "detective"]},
+    {"product_id": 11, "sku": "PST-SFX-04", "format": "poster", "specs": {"size": "A3", "pieces": 4, "paper_gsm": 250, "finish": "gloss", "designs": ["POW", "BOOM", "ZZZZ", "OUCH"]}, "tags": ["poster", "sound effects", "set"]},
+    {"product_id": 12, "sku": "MNG-RN-BOX", "format": "box set", "specs": {"volumes": [1, 2, 3, 4], "pages": 768, "mangaka": "H. Sato", "extras": ["slipcase", "fold-out city map"], "age_rating": "16+"}, "tags": ["manga", "samurai", "cyberpunk", "box set"]}
+  ]
+}
